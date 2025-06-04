@@ -1,0 +1,310 @@
+---
+title: "Hypothesis testing"
+author: "omon das"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: hpstr
+    toc: yes
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning  = FALSE)
+knitr::opts_chunk$set(message  = FALSE)
+
+```
+
+
+
+
+
+```{r}
+
+library(tidyverse)
+
+
+```
+
+```{r}
+data=starwars
+
+```
+
+```{r}
+colnames(data)
+
+```
+
+### shaprio test for normality
+H0:Data is maybe normally distributed
+
+```{r}
+shapiro.test(data$height)
+
+```
+ p<0.05  i.e it is maybe not normally distributed
+
+
+### Kolmogorov-Smirnov tests
+
+H0: equal distribution
+
+# one sample Kolmogorov-Smirnov tests
+ks
+H0: Distribution is equal with normal distribution
+
+```{r}
+
+library(dgof)
+
+normaldata=rnorm(100)
+
+ks.test(normaldata,"pnorm")
+
+
+```
+p>0.05 > H0 not rejected > it is maybe similar to normal distribution
+
+### two sample  ks test:
+
+```{r}
+
+###normaldata
+
+
+uniformdata=runif(100)
+
+ks.test(normaldata,uniformdata)
+
+```
+p<0.05 > H0 rejected > distribution is not normal
+
+
+```{r}
+starwars=starwars %>% 
+  mutate(sex=as.factor(sex))
+
+sapply(starwars, class)
+
+```
+
+
+
+### variance spread equal test:
+
+1. Leven's test (in case non-normal)
+2. Bartlett test (in case normal)
+
+H0: spread of variance is equal
+
+```{r}
+#install.packages("car")
+
+library(car)
+
+leveneTest(starwars$height~starwars$sex,center=median)
+
+###note for normally distributed data center the data by mean
+###and for other case center the data by median
+### although median is the most versatile out of every central tendency
+
+
+
+```
+p>0.05 > H0 is not rejected > spread of variance is equal
+
+###parametric tests:
+
+
+t.tests() / wilcox.test() :
+1. one sample t-tests (mean) ||| Wilcoxon signed rank test(median)
+2. two sample t-tests (mean) ||| Mann whitney test or wilcoxon rank sum test (median)
+3. paired t-tests (mean) ||| wilcoxon signed rank test (median)
+
+
+```{r}
+###one sample t-test
+
+starwars %>% 
+  select(height) %>% 
+  t.test(mu = 160,
+         alternative = c("two.sided"),
+         conf.level = 0.95
+  )
+
+
+
+```
+p<0.05 >> Ho is rejected >> true mean is not equal to 160
+
+```{r}
+
+
+###two sample t-test
+
+starwars %>% 
+  filter(sex %in% c("male","female")) %>% 
+  select(height,sex) %>% 
+  drop_na() %>% 
+   t.test(height~sex,
+         alternative = c( "two.sided" ),
+         conf.level = 0.95, data=.)
+
+
+```
+p>0.05 >> Ho may not be rejected >> true difference in means between group female and group male is equal to 0
+
+
+```{r}
+starwars %>%
+  select(height,sex) %>% 
+  filter(sex %in% c('male','female')) %>% 
+  ggplot(mapping = aes(x=height,color=sex,fill = sex))+
+  geom_density() + theme(panel.grid.major = element_line(linetype = "blank"),
+    panel.grid.minor = element_line(linetype = "blank"),
+    plot.title = element_text(family = "AvantGarde"),
+    panel.background = element_rect(fill = "gray100"),
+    plot.background = element_rect(fill = "aliceblue")) +labs(title = "Height density plot between male and female",
+    alpha = 0.8)
+  
+
+
+
+```
+
+
+
+```{r}
+height_before_bornvita= c(150, 190, 140, 130, 140, 180)
+
+height_after_bornvita=  c(160, 192, 143, 133, 150, 181)
+
+starwars %>% 
+  select(height) %>% 
+  t.test(height_before_bornvita , height_after_bornvita,data=.,conf.level = 0.95, paired = TRUE,alternative = "two.sided")
+
+```
+### one sample wilcox test:
+
+```{r}
+wilcox.test(starwars$height,mu=160,
+              alternative = "two.sided",
+              conf.level = 0.95,
+              data=.)
+```
+p<0.05 >> true location is not equal to 160
+
+### paired wilcox test
+
+```{r}
+
+height_before_bornvita= c(150, 190, 140, 130, 140, 180)
+
+height_after_bornvita=  c(160, 192, 143, 133, 150, 181)
+
+
+wilcox.test(height_before_bornvita,height_after_bornvita,paired = TRUE,conf.level = 0.95)
+
+median(height_after_bornvita)
+
+median(height_before_bornvita)
+```
+
+p<0.05 >> H0 rejected >> median is not equal to 0 (difference in height exists)
+
+### wilcoxon rank sum test or mann whitney test or alternative of two sample t test
+
+```{r}
+data_non_parametric=starwars %>% 
+  select(height,sex) %>% 
+  filter( sex %in% c('male','female')) %>% 
+  drop_na()
+
+
+tibble(data_non_parametric)
+
+
+
+```
+
+```{r}
+
+wilcox.test(data_non_parametric$height~data_non_parametric$sex, 
+            alternative="two.sided",
+            conf.level=0.95)
+
+### quick comparison of  why i prefer non parametric over parametric
+
+
+```
+p<0.05 >> ho rejected >> median difference is not equal 0
+
+### ANOVA
+
+```{r}
+
+anova_data=
+  starwars %>% 
+  select(height,species) %>% 
+  mutate(species=as.factor(species)) %>% 
+  drop_na() %>% 
+  tibble()
+
+
+
+anova_data
+
+
+
+```
+
+```{r}
+### regardless i want to see if the variance is normally distributed ('~')
+model= aov(anova_data$height~anova_data$species)
+summary(model)
+#to check homogenity of variance
+plot(model,1)
+
+#to check normality in te data
+plot(model,2)
+```
+This means according to the residual vs fitted plot we can conclude the is heteroscedesticy in the data i.e spread of variance is unequal, as the is a clear relation between fitted values and residual. We also could have used levenes test for this
+
+
+```{r}
+ggplot(sample_n(anova_data,5),aes(x=species,y=height,color=species))+
+  geom_boxplot()+
+  facet_wrap(vars(species))
+
+
+
+```
+
+
+```{r}
+###homoscedesticity is a must condition for anova, we can identify it using levene's test as shown above. But for the sake of quick analysis we will assume there is already homoscedesticity in the data.
+
+aov(height~species,data = anova_data)%>% 
+  TukeyHSD()
+
+```
+
+```{r}
+
+aov(height~species,data = anova_data) %>% 
+  summary()
+
+```
+p<0.05 >> Ho rejected >> difference in mean is not equal.
+
+### non parametric test for anova:
+kruskall wallis rank sum  test
+
+```{r}
+kruskal.test(height~species, data= anova_data) 
+
+
+```
+
