@@ -1,14 +1,25 @@
-🧪 Statistical Hypothesis Testing
-Tests covered:
+# 🧪 Statistical Hypothesis Testing
 
-Shapiro-Wilk normality test 📏
+**Focus**: Applying various hypothesis tests on Star Wars character attributes.
 
-Kolmogorov-Smirnov distribution comparison
+## ✅ Tests Covered:
 
-t-tests & Wilcoxon tests 📊
+- 📏 Shapiro-Wilk normality test  
+- 📉 Kolmogorov-Smirnov distribution comparison  
+- 📊 t-tests & Wilcoxon tests  
+- 🧪 ANOVA & Kruskal-Wallis
 
-ANOVA & Kruskal-Wallis
+## 📂 Dataset
 
-Dataset: Star Wars character attributes
+- Star Wars character attributes (e.g., height, gender, affiliation)
 
-Packages: car, dgof, tidyverse
+## 🧰 Packages Used
+
+- `car`
+- `dgof`
+- `tidyverse`
+
+## 📎 Notes
+
+This notebook demonstrates foundational statistical test procedures in R using a playful and interpretable dataset.
+
